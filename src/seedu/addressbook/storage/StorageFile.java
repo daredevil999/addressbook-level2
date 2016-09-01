@@ -32,6 +32,16 @@ public class StorageFile {
             super(message);
         }
     }
+    
+    /**
+     * Signals that the storage file has been deleted during operation
+     */
+    public static class FileDeletedException extends StorageOperationException {
+        public FileDeletedException(String message) {
+            super(message);
+        }
+    }
+    
 
     /**
      * Signals that some error has occured while trying to convert and read/write data between the application
@@ -88,8 +98,7 @@ public class StorageFile {
         /* Note: Note the 'try with resource' statement below.
          * More info: https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html
          */
-        try (final Writer fileWriter =
-                     new BufferedWriter(new FileWriter(path.toFile()))) {
+        try (final Writer fileWriter = getFileWriter()) {
 
             final AdaptedAddressBook toSave = new AdaptedAddressBook(addressBook);
             final Marshaller marshaller = jaxbContext.createMarshaller();
@@ -100,15 +109,25 @@ public class StorageFile {
             throw new StorageOperationException("Error writing to file: " + path);
         } catch (JAXBException jaxbe) {
             throw new StorageOperationException("Error converting address book into storage format");
+        } catch (FileDeletedException fde) {
+        	throw fde;
         }
     }
 
+    private Writer getFileWriter() throws IOException, FileDeletedException {
+        File destinationFile = path.toFile();
+        if(! destinationFile.exists())
+            throw new FileDeletedException("File deleted while running");
+        return new BufferedWriter(new FileWriter(destinationFile));
+    }
+    
     /**
      * Loads data from this storage file.
      *
      * @throws StorageOperationException if there were errors reading and/or converting data from file.
+     * @throws IOException if there were errors loading file due to deletion of file
      */
-    public AddressBook load() throws StorageOperationException {
+    public AddressBook load() throws StorageOperationException, IOException {
         try (final Reader fileReader =
                      new BufferedReader(new FileReader(path.toFile()))) {
 
