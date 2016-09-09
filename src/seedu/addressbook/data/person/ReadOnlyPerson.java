@@ -37,29 +37,29 @@ public interface ReadOnlyPerson {
      */
     default String getAsTextShowAll() {
         final StringBuilder builder = new StringBuilder();
-        final String detailIsPrivate = "(private) ";
-        builder.append(getName())
-                .append(" Phone: ");
-        if (getPhone().isPrivate()) {
-            builder.append(detailIsPrivate);
-        }
-        builder.append(getPhone())
-                .append(" Email: ");
-        if (getEmail().isPrivate()) {
-            builder.append(detailIsPrivate);
-        }
-        builder.append(getEmail())
-                .append(" Address: ");
-        if (getAddress().isPrivate()) {
-            builder.append(detailIsPrivate);
-        }
-        builder.append(getAddress())
+        builder.append(getPrintableString(this.getName(), this.getPhone(), this.getEmail(), this.getAddress()))
                 .append(" Tags: ");
         for (Tag tag : getTags()) {
             builder.append(tag);
         }
         return builder.toString();
     }
+    
+    /**
+     * Returns a concatenated version of the printable strings of each object.
+     */
+   default String getPrintableString(Printable... printables){
+       final StringBuilder builder = new StringBuilder();
+       final String detailIsPrivate = "(private) ";
+       for (Printable p : printables) {
+           if (p.isPrivate()) {
+               builder.append(detailIsPrivate);
+           }
+           builder.append(p.getPrintableString())
+                   .append(" ");
+       }
+       return builder.toString();
+   }
 
     /**
      * Formats a person as text, showing only non-private contact details.
@@ -67,19 +67,26 @@ public interface ReadOnlyPerson {
     default String getAsTextHidePrivate() {
         final StringBuilder builder = new StringBuilder();
         builder.append(getName());
-        if (!getPhone().isPrivate()) {
-            builder.append(" Phone: ").append(getPhone());
-        }
-        if (!getEmail().isPrivate()) {
-            builder.append(" Email: ").append(getEmail());
-        }
-        if (!getAddress().isPrivate()) {
-            builder.append(" Address: ").append(getAddress());
-        }
+        builder.append(getPrivatePrintableString(this.getPhone(), this.getEmail(), this.getAddress()));
         builder.append(" Tags: ");
         for (Tag tag : getTags()) {
             builder.append(tag);
         }
         return builder.toString();
     }
+    
+    /**
+     * Returns a concatenated version of the printable strings of each object.
+     * Private variables are hidden and not shown.
+     */
+   default String getPrivatePrintableString(Printable... printables){
+       final StringBuilder builder = new StringBuilder();
+       for (Printable p : printables) {
+           if (!p.isPrivate()) {
+               builder.append(p.getPrintableString())
+                       .append(" ");
+           }
+       }
+       return builder.toString();
+   }
 }
