@@ -18,8 +18,7 @@ public class Phone extends Contact {
      * @throws IllegalValueException if given phone string is invalid.
      */
     public Phone(String phone, boolean isPrivate) throws IllegalValueException {
-        super(phone, isPrivate);
-        phone = phone.trim();
+        super(phone.trim(), isPrivate);
         if (!isValidPhone(phone)) {
             throw new IllegalValueException(MESSAGE_PHONE_CONSTRAINTS);
         }
@@ -31,12 +30,5 @@ public class Phone extends Contact {
     public static boolean isValidPhone(String test) {
         return test.matches(PHONE_VALIDATION_REGEX);
     }
-
-    @Override
-    public boolean equals(Object other) {
-        return other == this // short circuit if same object
-                || (other instanceof Phone // instanceof handles nulls
-                && this.value.equals(((Phone) other).value)); // state check
-    }
-
+    
 }
