@@ -5,11 +5,14 @@ import seedu.addressbook.data.person.UniquePersonList.*;
 import seedu.addressbook.data.tag.UniqueTagList;
 import seedu.addressbook.data.tag.UniqueTagList.*;
 import seedu.addressbook.data.tag.Tag;
+import seedu.addressbook.data.tag.Tagging;
+import seedu.addressbook.data.tag.Tagging.Action;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.ArrayList;
 
 /**
  * Represents the entire address book. Contains the data of the address book.
@@ -22,6 +25,8 @@ public class AddressBook {
 
     private final UniquePersonList allPersons;
     private final UniqueTagList allTags; // can contain tags not attached to any person
+    
+    private final ArrayList <Tagging> tagging;
 
     /**
      * Creates an empty address book.
@@ -29,6 +34,7 @@ public class AddressBook {
     public AddressBook() {
         allPersons = new UniquePersonList();
         allTags = new UniqueTagList();
+        tagging = new ArrayList<Tagging>();
     }
 
     /**
@@ -39,11 +45,40 @@ public class AddressBook {
      * @param tags external changes to this will not affect this address book
      */
     public AddressBook(UniquePersonList persons, UniqueTagList tags) {
+        this (persons, tags, addExistingTags(persons));
+    }
+
+    /**
+     * Constructs an address book with the given data.
+     * Also updates the tag list with any missing tags found in any person.
+     *
+     * @param persons external changes to this will not affect this address book
+     * @param tags external changes to this will not affect this address book
+     */
+    public AddressBook(UniquePersonList persons, UniqueTagList tags, ArrayList<Tagging> taggings) {
         this.allPersons = new UniquePersonList(persons);
         this.allTags = new UniqueTagList(tags);
+        this.tagging = taggings;
         for (Person p : allPersons) {
             syncTagsWithMasterList(p);
         }
+    }
+
+    /**
+     * Adds existing tags to the tagging list
+     *
+     * @param persons external changes to this will not affect this address book
+     * @return returns ArrayList<Tagging> 
+     */
+    public static ArrayList<Tagging> addExistingTags(UniquePersonList persons) {
+        ArrayList<Tagging> taggings = new ArrayList<Tagging>();
+        for (Person p: persons ) {
+            UniqueTagList individualTagList = p.getTags();
+            for (Tag t: individualTagList) {
+                taggings.add(new Tagging(Action.ADD, p.getName().toString(), t));
+            }
+        }
+        return taggings;
     }
 
     /**
@@ -79,6 +114,18 @@ public class AddressBook {
     public void addPerson(Person toAdd) throws DuplicatePersonException {
         syncTagsWithMasterList(toAdd);
         allPersons.add(toAdd);
+        addPersonTag(toAdd);
+    }
+    
+    /**
+     * Adds a person's tag to the tagging list
+     * 
+     */
+    public void addPersonTag(Person toAdd) {
+        UniqueTagList individualTagList = toAdd.getTags();
+        for (Tag t: individualTagList) {
+            this.tagging.add(new Tagging(Action.ADD, toAdd.getName().toString(), t));
+        }
     }
 
     /**
@@ -111,6 +158,10 @@ public class AddressBook {
      */
     public void removePerson(ReadOnlyPerson toRemove) throws PersonNotFoundException {
         allPersons.remove(toRemove);
+        UniqueTagList tags = toRemove.getTags();
+        for (Tag t : tags) {
+            tagging.add(new Tagging (Action.REMOVE, toRemove.getName().toString(), t));
+        }
     }
 
     /**
@@ -128,6 +179,19 @@ public class AddressBook {
     public void clear() {
         allPersons.clear();
         allTags.clear();
+    }
+    
+    /**
+     * Prints all taggings and then clears all tagging list for that session.
+     */
+    public String exitTaggingList() {
+        StringBuilder builder =  new StringBuilder();
+        for (Tagging t : tagging) {
+            builder.append(t.toString())
+                    .append("\n");
+        }
+        tagging.clear();
+        return builder.toString();
     }
 
     /**

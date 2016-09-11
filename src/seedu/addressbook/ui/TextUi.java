@@ -105,6 +105,9 @@ public class TextUi {
         showToUser(MESSAGE_GOODBYE, DIVIDER, DIVIDER);
     }
 
+    public void showTaggingList(String taggingList) {
+        showToUser(taggingList, DIVIDER, DIVIDER);
+    }
 
     public void showInitFailedMessage() {
         showToUser(MESSAGE_INIT_FAILED, DIVIDER, DIVIDER);
